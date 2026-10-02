@@ -1,9 +1,3 @@
-/* ═══════════════════════════════════════════════════════ */
-/* ═══════════ AILIFESOLUTION (ALS) SERVER ════════════ */
-/* ═══════════ Dr. Shadrack Birthday Portal ═══════════ */
-/* ═══════════════ ALL-IN-ONE FILE ════════════════════ */
-/* ═══════════════════════════════════════════════════════ */
-
 const express = require('express');
 const session = require('express-session');
 const bodyParser = require('body-parser');
@@ -12,423 +6,421 @@ const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const DATA_DIR = path.join(__dirname, 'data');
 
-/* ═══════════ CONFIG ═══════════ */
+if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+
 const CONFIG = {
-  COMPANY_NAME: process.env.COMPANY_NAME || 'AiliFesolution',
-  COMPANY_SHORT: process.env.COMPANY_SHORT || 'ALS',
-  BIRTHDAY_NAME: process.env.BIRTHDAY_NAME || 'Dr. Shadrack Ahazi Sanga',
-  BIRTHDAY_DATE: process.env.BIRTHDAY_DATE || '2026-10-02',
-  BIRTHDAY_AGE: process.env.BIRTHDAY_AGE || 24,
-  ADMIN_USERNAME: process.env.ADMIN_USERNAME || 'admin',
-  ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || 'shadrack2026'
+  COMPANY: 'AiliFesolution (ALS)',
+  NAME: 'Dr. Shadrack Ahazi Sanga',
+  AGE: 24,
+  DATE: 'Octoba 2, 2002',
+  ADMIN_USER: 'admin',
+  ADMIN_PASS: 'shadrack2026'
 };
 
-/* ═══════════ DATA DIR (auto-create) ═══════════ */
-const DATA_DIR = path.join(__dirname, 'data');
-if (!fs.existsSync(DATA_DIR)) {
-  try {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-    console.log('✅ Data folder imeundwa');
-  } catch (e) {
-    console.log('⚠️  Imeshindwa kuunda data folder:', e.message);
-  }
-}
-
-/* ═══════════ HELPERS ═══════════ */
+/* ═══════ HELPERS ═══════ */
 function readData(file) {
   try {
-    const filepath = path.join(DATA_DIR, file);
-    if (!fs.existsSync(filepath)) return [];
-    return JSON.parse(fs.readFileSync(filepath, 'utf8'));
-  } catch (e) { return []; }
+    const p = path.join(DATA_DIR, file);
+    return fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, 'utf8')) : [];
+  } catch { return []; }
 }
-
 function writeData(file, data) {
   try {
-    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
     fs.writeFileSync(path.join(DATA_DIR, file), JSON.stringify(data, null, 2));
     return true;
-  } catch (e) {
-    console.error('Write error:', e.message);
-    return false;
-  }
+  } catch { return false; }
 }
 
-/* ═══════════ MIDDLEWARE ═══════════ */
+/* ═══════ MIDDLEWARE ═══════ */
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
-
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'als-secret-2026-shadrack',
+  secret: process.env.SESSION_SECRET || 'als-secret-2026',
   resave: false,
   saveUninitialized: false,
-  cookie: { maxAge: 1000 * 60 * 60 * 24, httpOnly: true, secure: false }
+  cookie: { maxAge: 86400000 }
 }));
-
-/* ═══════════ STATIC FILES ═══════════ */
 app.use(express.static(path.join(__dirname, 'public')));
 
-/* ═══════════ REQUEST LOGGING ═══════════ */
-app.use((req, res, next) => {
-  console.log(`📥 ${req.method} ${req.path}`);
-  next();
+/* ═══════ FAVICON (emoji SVG) ═══════ */
+app.get('/favicon.ico', (req, res) => {
+  res.setHeader('Content-Type', 'image/svg+xml');
+  res.send(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🎂</text></svg>`);
 });
 
-/* ═══════════════════════════════════════════════════════ */
-/* ═══════════════════ HTML HELPERS ═══════════════════ */
-/* ═══════════════════════════════════════════════════════ */
-
-const HEAD_HTML = `
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Poppins:wght@300;400;600;800;900&family=Cinzel:wght@700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="stylesheet" href="/css/slashes.css">
-<link rel="stylesheet" href="/css/style.css">
-<link rel="stylesheet" href="/css/admin.css">
-`;
-
-const NAVBAR_HTML = `
-<nav class="navbar" id="mainNav">
-  <div class="logo">
-    <span class="logo-icon">⚕️</span>
-    <span class="logo-text">Dr. Shadrack</span>
-    <span class="als-badge">ALS</span>
-  </div>
-  <ul class="nav-links" id="navLinks">
-    <li><a href="/" class="nav-link">🏠 Welcome</a></li>
-    <li><a href="/home" class="nav-link">🏠 Nyumbani</a></li>
-    <li><a href="/happybirthday" class="nav-link">🎂 Birthday</a></li>
-    <li><a href="/dr.shadrack" class="nav-link">⚕️ Dr. Shadrack</a></li>
-    <li><a href="/gift" class="nav-link">🎁 Zawadi</a></li>
-    <li><a href="/admin" class="nav-link">🔐 Admin</a></li>
-  </ul>
-  <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
-</nav>
-`;
-
-const FOOTER_HTML = `
-<footer class="footer glass">
-  <div class="footer-logo">
-    <div class="als-mini">
-      <span class="als-mini-text">ALS</span>
-      <span class="als-mini-sub">AiliFesolution</span>
-    </div>
-  </div>
-  <h3>🎉 Happy 24th Birthday Dr. Shadrack Ahazi Sanga 🎉</h3>
-  <p>Kuzaliwa: Octoba 2, 2002 | Sherehe: Octoba 2, 2026</p>
-  <p class="small">Powered by <b>AiliFesolution (ALS)</b> © 2026</p>
-  <p class="small">Made with ❤️, Fataki 🎆 na Mapenzi 💖</p>
-</footer>
-<audio id="bgMusic" loop><source src="/audio/birthday-song.mp3" type="audio/mpeg"></audio>
-<script src="/js/slashes.js"></script>
-<script src="/js/script.js"></script>
-`;
-
-const SLASHES_HTML = `
-<div class="slash-super s1"></div><div class="slash-super s2"></div><div class="slash-super s3"></div>
-<div class="slash-super s4"></div><div class="slash-super s5"></div><div class="slash-super s6"></div>
-<div class="slash-super s7"></div><div class="slash-super s8"></div><div class="slash-super s9"></div>
-<div class="slash-super s10"></div><div class="slash-super s11"></div><div class="slash-super s12"></div>
-<div class="slash-super s13"></div><div class="slash-super s14"></div><div class="slash-super s15"></div>
-<div class="slash-super s16"></div><div class="slash-super s17"></div><div class="slash-super s18"></div>
-<div class="cross-slash cross-1"></div><div class="cross-slash cross-2"></div>
-<div class="cross-slash cross-3"></div><div class="cross-slash cross-4"></div>
-<div class="cross-slash cross-5"></div><div class="cross-slash cross-6"></div>
-<div class="cross-slash cross-7"></div><div class="cross-slash cross-8"></div>
-<div class="diag-slash dg-1"></div><div class="diag-slash dg-2"></div>
-<div class="diag-slash dg-3"></div><div class="diag-slash dg-4"></div>
-<div class="diag-slash dg-5"></div><div class="diag-slash dg-6"></div>
-<div class="cine-burst b1"></div><div class="cine-burst b2"></div>
-<div class="cine-burst b3"></div><div class="cine-burst b4"></div><div class="cine-burst b5"></div>
-`;
-
-/* ═══════════════════════════════════════════════════════ */
-/* ═══════════════════ ROUTES / SLASHES ═══════════════ */
-/* ═══════════════════════════════════════════════════════ */
-
-/* ──────── / (WELCOME PAGE) ──────── */
-app.get('/', (req, res) => {
-  res.send(renderWelcome());
-});
-
-app.get('/welcome', (req, res) => {
-  res.send(renderWelcome());
-});
-
-function renderWelcome() {
+/* ═══════════════════════════════════════════════ */
+/* ═══════════ HTML LAYOUT BASE ════════════════ */
+/* ═══════════════════════════════════════════════ */
+function layout({ title, body, active = '' }) {
   return `<!DOCTYPE html>
 <html lang="sw">
-<head>${HEAD_HTML}<title>Welcome — AiliFesolution (ALS)</title></head>
-<body class="page-welcome">
-<div id="welcomePage">
-  <div class="welcome-stars"></div>
-  <div class="welcome-slash ws-1"></div>
-  <div class="welcome-slash ws-2"></div>
-  <div class="welcome-slash ws-3"></div>
-  <div class="welcome-slash ws-4"></div>
-  <div class="welcome-slash ws-5"></div>
-  <div class="welcome-slash ws-6"></div>
-  <div class="welcome-slash ws-7"></div>
-  <div class="welcome-slash ws-8"></div>
-  <div class="welcome-cross wc-1"></div>
-  <div class="welcome-cross wc-2"></div>
-  <div class="welcome-cross wc-3"></div>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0f0c29">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>${title}</title>
 
-  <div class="als-logo-intro">
-    <div class="als-ring ring-1"></div>
-    <div class="als-ring ring-2"></div>
-    <div class="als-ring ring-3"></div>
-    <div class="als-ring ring-4"></div>
-    <div class="als-ring ring-5"></div>
-    <div class="als-core">
-      <span class="als-text">ALS</span>
-      <span class="als-sub">AiliFesolution</span>
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Poppins:wght@300;400;600;700;800;900&family=Cinzel:wght@700;900&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="page-${active}">
+
+<!-- ═══════════ TOP APP BAR ═══════════ -->
+<header class="app-topbar">
+  <div class="topbar-left">
+    <div class="als-logo-small">
+      <i class="fas fa-heart-pulse"></i>
+    </div>
+    <div>
+      <div class="topbar-title">Dr. Shadrack</div>
+      <div class="topbar-sub">Miaka ${CONFIG.AGE} • ALS</div>
     </div>
   </div>
+  <a href="/admin" class="topbar-btn">
+    <i class="fas fa-user-shield"></i>
+  </a>
+</header>
 
-  <div class="welcome-content">
-    <p class="welcome-small">🌟 POWERED BY 🌟</p>
-    <h1 class="welcome-als">AILIFESOLUTION</h1>
-    <p class="welcome-tag">Company • Innovation • Excellence</p>
-    <div class="welcome-divider"></div>
-    <p class="welcome-invite">Karibu Kwenye Sherehe ya Kidijitali ya</p>
-    <h2 class="welcome-name">${CONFIG.BIRTHDAY_NAME}</h2>
-    <p class="welcome-age">🎊 Miaka ${CONFIG.BIRTHDAY_AGE} ya Baraka 🎊</p>
+<!-- ═══════════ PAGE CONTENT ═══════════ -->
+<main class="app-main">
+${body}
+</main>
 
-    <div class="welcome-routes">
-      <a href="/home" class="route-card"><i class="fas fa-home"></i><span>/home</span><small>Nyumbani</small></a>
-      <a href="/happybirthday" class="route-card"><i class="fas fa-birthday-cake"></i><span>/happybirthday</span><small>Sherehe</small></a>
-      <a href="/dr.shadrack" class="route-card"><i class="fas fa-user-md"></i><span>/dr.shadrack</span><small>Wasifu</small></a>
-      <a href="/gift" class="route-card"><i class="fas fa-gift"></i><span>/gift</span><small>Zawadi</small></a>
-      <a href="/admin" class="route-card"><i class="fas fa-lock"></i><span>/admin</span><small>Admin</small></a>
-    </div>
+<!-- ═══════════ BOTTOM NAV (APP STYLE) ═══════════ -->
+<nav class="bottom-nav">
+  <a href="/home" class="nav-btn ${active === 'home' ? 'active' : ''}">
+    <div class="nav-icon"><i class="fas fa-house"></i></div>
+    <span>Nyumbani</span>
+  </a>
+  <a href="/happybirthday" class="nav-btn ${active === 'birthday' ? 'active' : ''}">
+    <div class="nav-icon"><i class="fas fa-cake-candles"></i></div>
+    <span>Sherehe</span>
+  </a>
+  <a href="/gift" class="nav-btn ${active === 'gift' ? 'active' : ''}">
+    <div class="nav-icon"><i class="fas fa-gift"></i></div>
+    <span>Zawadi</span>
+  </a>
+  <a href="/dr.shadrack" class="nav-btn ${active === 'profile' ? 'active' : ''}">
+    <div class="nav-icon"><i class="fas fa-user-doctor"></i></div>
+    <span>Wasifu</span>
+  </a>
+  <a href="/music" class="nav-btn ${active === 'music' ? 'active' : ''}">
+    <div class="nav-icon"><i class="fas fa-music"></i></div>
+    <span>Muziki</span>
+  </a>
+</nav>
 
-    <a href="/home" class="btn-enter"><span>🚀 INGIA KWENYE SHEREHE</span><i class="fas fa-arrow-right"></i></a>
-    <p class="welcome-footer">© 2026 AiliFesolution (ALS) — All Rights Reserved</p>
-  </div>
+<!-- ═══════════ FLOATING MUSIC BUTTON ═══════════ -->
+<button id="musicToggle" class="music-float" title="Washa/Zima Muziki">
+  <i class="fas fa-play"></i>
+</button>
 
-  <div class="welcome-emoji emoji-1">🎂</div>
-  <div class="welcome-emoji emoji-2">🎈</div>
-  <div class="welcome-emoji emoji-3">🎁</div>
-  <div class="welcome-emoji emoji-4">💐</div>
-  <div class="welcome-emoji emoji-5">🎉</div>
-  <div class="welcome-emoji emoji-6">⭐</div>
-  <div class="welcome-emoji emoji-7">🩺</div>
-  <div class="welcome-emoji emoji-8">👑</div>
-</div>
-<script src="/js/slashes.js"></script>
-<script src="/js/script.js"></script>
+<audio id="bgMusic" loop>
+  <source src="/audio/birthday.mp3" type="audio/mpeg">
+  <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+</audio>
+
+<canvas id="fireworks"></canvas>
+<canvas id="confetti"></canvas>
+
+<script src="/js/app.js"></script>
 </body>
 </html>`;
 }
 
-/* ──────── /HOME ──────── */
-app.get('/home', (req, res) => {
-  res.send(`<!DOCTYPE html>
-<html lang="sw">
-<head>${HEAD_HTML}<title>Nyumbani — Dr. Shadrack</title></head>
-<body class="page-home">
-
-<div id="cinematicIntro" class="active">
-  ${SLASHES_HTML}
-  <div class="cine-text">
-    <div class="cine-line cl-1">🎊 HAPPY BIRTHDAY 🎊</div>
-    <div class="cine-line cl-2">DR. SHADRACK</div>
-    <div class="cine-line cl-2b">Ahazi Sanga</div>
-    <div class="cine-line cl-3">⚕️ Miaka ${CONFIG.BIRTHDAY_AGE} ya Mafanikio ⚕️</div>
-    <div class="cine-line cl-4">Octoba 2, 2002 → Octoba 2, 2026</div>
-    <div class="cine-line cl-5">Powered by AiliFesolution (ALS)</div>
+/* ═══════════════════════════════════════════════ */
+/* ═══════════════ SLASH: / ════════════════════ */
+/* ═══════════════════════════════════════════════ */
+app.get('/', (req, res) => {
+  const body = `
+<div class="welcome-hero">
+  <div class="welcome-logo">
+    <div class="logo-ring"></div>
+    <div class="logo-ring r2"></div>
+    <div class="logo-ring r3"></div>
+    <div class="logo-core">
+      <i class="fas fa-heart-pulse"></i>
+      <div class="logo-als">ALS</div>
+    </div>
   </div>
-  <div class="cine-flash"></div>
+
+  <div class="welcome-text">
+    <div class="badge-company">✦ AILIFESOLUTION ✦</div>
+    <h1 class="welcome-heading">Karibu Kwenye</h1>
+    <h2 class="welcome-title">Sherehe ya Miaka ${CONFIG.AGE}</h2>
+    <div class="welcome-name">${CONFIG.NAME}</div>
+    <p class="welcome-sub">🎂 Octoba 2, 2002 → Octoba 2, 2026 🎂</p>
+  </div>
+
+  <div class="welcome-buttons">
+    <a href="/home" class="btn-main">
+      <i class="fas fa-rocket"></i>
+      <span>INGIA KWENYE SHEREHE</span>
+    </a>
+    <a href="/happybirthday" class="btn-sec">
+      <i class="fas fa-cake-candles"></i>
+      <span>Tazama Sherehe</span>
+    </a>
+  </div>
+
+  <div class="welcome-footer-text">
+    <i class="fas fa-shield-heart"></i> Powered by ${CONFIG.COMPANY} © 2026
+  </div>
+</div>
+`;
+  res.send(layout({ title: 'Karibu — Dr. Shadrack', body, active: 'welcome' }));
+});
+
+app.get('/welcome', (req, res) => res.redirect('/'));
+
+/* ═══════════════════════════════════════════════ */
+/* ═══════════════ SLASH: /home ════════════════ */
+/* ═══════════════════════════════════════════════ */
+app.get('/home', (req, res) => {
+  const gallery = readData('gallery.json');
+  const defaultPhotos = [
+    { url: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=600', caption: 'Daktari Bingwa' },
+    { url: 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=600', caption: 'Kazini' },
+    { url: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=600', caption: 'Sherehe' }
+  ];
+  const photos = gallery.length > 0 ? gallery : defaultPhotos;
+
+  const body = `
+<!-- INTRO SLASH ANIMATION -->
+<div id="cinematicIntro" class="cinematic-intro">
+  ${Array.from({length: 15}).map((_, i) => `<div class="slash-line" style="--i:${i}"></div>`).join('')}
+  <div class="cinematic-text">
+    <div class="cine-line" style="--d:0.3s">🎊 HAPPY BIRTHDAY 🎊</div>
+    <div class="cine-line big" style="--d:1s">DR. SHADRACK</div>
+    <div class="cine-line" style="--d:1.7s">Ahazi Sanga</div>
+    <div class="cine-line small" style="--d:2.4s">Miaka ${CONFIG.AGE} • Octoba 2, 2026</div>
+    <div class="cine-line tiny" style="--d:3s">Powered by ${CONFIG.COMPANY}</div>
+  </div>
 </div>
 
-<canvas id="fireworks"></canvas>
-<canvas id="confetti"></canvas>
-<canvas id="flowers"></canvas>
+<!-- HERO CARD -->
+<section class="hero-card">
+  <div class="hero-badge">👑 Birthday Boy</div>
+  <h1 class="hero-title-shine">HAPPY BIRTHDAY</h1>
+  <h2 class="hero-name">DR. SHADRACK</h2>
+  <p class="hero-sub">Ahazi Sanga</p>
+  <div class="hero-age-pill">🎊 Miaka ${CONFIG.AGE} 🎊</div>
+  <p class="hero-birth">Kuzaliwa: Octoba 2, 2002</p>
+</section>
 
-${NAVBAR_HTML}
-
-<section id="home" class="hero reveal-page">
-  <div class="hero-content glass">
-    <div class="crown">👑</div>
-    <div class="balloons">
-      <div class="balloon b1">🎈</div><div class="balloon b2">🎈</div>
-      <div class="balloon b3">🎈</div><div class="balloon b4">🎈</div>
-      <div class="balloon b5">🎈</div>
-    </div>
-    <p class="sub-title">🎉 Karibu kwenye Sherehe ya 🎉</p>
-    <h1 class="main-title"><span class="shine">HAPPY BIRTHDAY</span></h1>
-    <h2 class="name-title" data-text="Dr. Shadrack">DR. SHADRACK</h2>
-    <p class="name-subtitle">Ahazi Sanga</p>
-    <p class="age-badge">🎊 Miaka ${CONFIG.BIRTHDAY_AGE} 🎊</p>
-    <p class="birth-info">Kuzaliwa: Octoba 2, 2002 → Leo: Octoba 2, 2026</p>
-    <p class="tribute">⚕️ Daktari Bingwa | First Bro | Kiongozi wa Kesho ⚕️</p>
-    <div class="hero-buttons">
-      <a href="/dr.shadrack" class="btn btn-primary"><i class="fas fa-user-md"></i> Wasifu Wake</a>
-      <a href="/gift" class="btn btn-secondary"><i class="fas fa-gift"></i> Zawadi</a>
-    </div>
-    <div class="birthday-cake">
-      <div class="cake-flame"></div>
-      <div class="cake-layer"></div>
-      <div class="cake-layer"></div>
-      <div class="cake-layer"></div>
-    </div>
+<!-- COUNTDOWN -->
+<section class="countdown-card">
+  <h3><i class="fas fa-hourglass-half"></i> Siku Yako Kuu</h3>
+  <div class="countdown-grid">
+    <div class="countdown-item"><div class="cd-num" id="days">00</div><div class="cd-lbl">Siku</div></div>
+    <div class="countdown-item"><div class="cd-num" id="hours">00</div><div class="cd-lbl">Saa</div></div>
+    <div class="countdown-item"><div class="cd-num" id="minutes">00</div><div class="cd-lbl">Dakika</div></div>
+    <div class="countdown-item"><div class="cd-num" id="seconds">00</div><div class="cd-lbl">Sekunde</div></div>
   </div>
 </section>
 
-<section class="countdown-section glass reveal">
-  <h2>🎯 Siku Yako Kuu Inakaribia</h2>
-  <div id="countdown" class="countdown">
-    <div class="cd-box"><span id="days">00</span><p>Siku</p></div>
-    <div class="cd-box"><span id="hours">00</span><p>Saa</p></div>
-    <div class="cd-box"><span id="minutes">00</span><p>Dakika</p></div>
-    <div class="cd-box"><span id="seconds">00</span><p>Sekunde</p></div>
-  </div>
-</section>
-
-${FOOTER_HTML}
-</body>
-</html>`);
-});
-
-/* ──────── /HAPPYBIRTHDAY ──────── */
-app.get('/happybirthday', (req, res) => {
-  res.send(`<!DOCTYPE html>
-<html lang="sw">
-<head>${HEAD_HTML}<title>Happy Birthday — Dr. Shadrack</title></head>
-<body class="page-birthday">
-
-<canvas id="fireworks"></canvas>
-<canvas id="confetti"></canvas>
-<canvas id="flowers"></canvas>
-
-${NAVBAR_HTML}
-
-<section class="page-hero">
-  <div class="glass page-hero-content">
-    <h1 class="main-title">🎂 HAPPY BIRTHDAY 🎂</h1>
-    <h2 class="name-title">DR. SHADRACK</h2>
-    <p class="name-subtitle">Ahazi Sanga</p>
-    <p class="age-badge">🎊 Miaka ${CONFIG.BIRTHDAY_AGE} 🎊</p>
-    <p class="tribute">Kuzaliwa: Octoba 2, 2002 | Sherehe: Octoba 2, 2026</p>
-    <div class="action-buttons">
-      <button id="fireBtn" class="btn btn-fire"><i class="fas fa-fire"></i> Zindua Fataki!</button>
-      <button id="flowerBtn" class="btn btn-flower"><i class="fas fa-seedling"></i> Tupa Maua!</button>
-      <button id="giftBtn" class="btn btn-gift"><i class="fas fa-gift"></i> Fungua Zawadi!</button>
-      <button id="musicBtn" class="btn btn-music"><i class="fas fa-music"></i> Washa Muziki</button>
-    </div>
-  </div>
-</section>
-
-<section class="congrats-section reveal-page">
-  <h2 class="section-title">🎊 HONGERA DR. SHADRACK! 🎊</h2>
-  <div class="congrats-grid">
-    <div class="congrats-card glass"><div class="icon">🩺</div><h3>Daktari Bingwa</h3><p>Weledi na upendo kwa wagonjwa!</p></div>
-    <div class="congrats-card glass"><div class="icon">🏆</div><h3>Mafanikio</h3><p>Miaka ${CONFIG.BIRTHDAY_AGE} ya mafanikio!</p></div>
-    <div class="congrats-card glass"><div class="icon">❤️</div><h3>Upendo</h3><p>Familia inakupenda!</p></div>
-    <div class="congrats-card glass"><div class="icon">🌟</div><h3>Mustakabali</h3><p>Safari ndefu inakusubiri!</p></div>
-  </div>
-</section>
-
-${FOOTER_HTML}
-</body>
-</html>`);
-});
-
-/* ──────── /DR.SHADRACK ──────── */
-app.get('/dr.shadrack', (req, res) => {
-  res.send(`<!DOCTYPE html>
-<html lang="sw">
-<head>${HEAD_HTML}<title>Dr. Shadrack — Wasifu</title></head>
-<body class="page-profile">
-
-<canvas id="fireworks"></canvas>
-
-${NAVBAR_HTML}
-
-<section class="page-hero">
-  <div class="glass page-hero-content">
-    <div class="crown">⚕️</div>
-    <h1 class="name-title">DR. SHADRACK</h1>
-    <p class="name-subtitle">Ahazi Sanga</p>
-    <p class="tribute">Daktari • Mtaalamu wa Afya • Kiongozi</p>
-  </div>
-</section>
-
-<section class="congrats-section">
-  <h2 class="section-title">📖 Wasifu & Maono</h2>
-  <div class="congrats-grid">
-    <div class="congrats-card glass">
-      <div class="icon">🩺</div><h3>Kitaalamu</h3>
-      <p>Daktari wa binadamu mwenye maono makubwa, anayeamini katika kutoa huduma ya afya yenye usawa, weledi, na upendo wa dhati.</p>
-    </div>
-    <div class="congrats-card glass">
-      <div class="icon">👑</div><h3>Kifamilia</h3>
-      <p>Kaka mkubwa (First Bro) wa mfano, msikilizaji mzuri, na mtu mwenye upendo usio na kikomo kwa familia yake.</p>
-    </div>
-    <div class="congrats-card glass">
-      <div class="icon">🎯</div><h3>Malengo</h3>
-      <p>Kuboresha huduma za dharura na kuleta mapinduzi ya kidijitali katika sekta ya afya.</p>
-    </div>
-    <div class="congrats-card glass">
-      <div class="icon">💡</div><h3>Falsafa</h3>
-      <p>"Kuwa daktari si kazi tu, ni wito wa kiungu wa kuleta matumaini pale penye maumivu."</p>
-    </div>
-  </div>
-</section>
-
-<section class="history-section glass">
-  <h2 class="section-title">📖 Historia ya Maisha</h2>
-  <div class="timeline">
-    <div class="timeline-item left"><div class="content"><h3>2002 - Kuzaliwa 🎂</h3><p>Alizaliwa tarehe 2 Octoba 2002.</p></div></div>
-    <div class="timeline-item right"><div class="content"><h3>2018 - Chuo Kikuu 🎓</h3><p>Alijiunga na chuo kusomea Udaktari.</p></div></div>
-    <div class="timeline-item left"><div class="content"><h3>2023 - Kuwa Daktari 🩺</h3><p>Alihitimu kama Daktari halisi!</p></div></div>
-    <div class="timeline-item right"><div class="content"><h3>2026 - Miaka ${CONFIG.BIRTHDAY_AGE} 🎉</h3><p>Tunasherehekea miaka ${CONFIG.BIRTHDAY_AGE}!</p></div></div>
-  </div>
-</section>
-
-${FOOTER_HTML}
-</body>
-</html>`);
-});
-
-/* ──────── /GIFT ──────── */
-app.get('/gift', (req, res) => {
-  res.send(`<!DOCTYPE html>
-<html lang="sw">
-<head>${HEAD_HTML}<title>Zawadi — Dr. Shadrack</title></head>
-<body class="page-gift">
-
-<canvas id="fireworks"></canvas>
-<canvas id="confetti"></canvas>
-<canvas id="flowers"></canvas>
-
-${NAVBAR_HTML}
-
-<section class="page-hero">
-  <div class="glass page-hero-content">
-    <h1 class="main-title">🎁 ZAWADI KWA DR. SHADRACK 🎁</h1>
-    <p class="tribute">Fungua zawadi zako za upendo!</p>
-
-    <div class="gifts-grid">
-      <div class="gift-box glass" onclick="openGift(this, '🎁', 'Heri ya Kuzaliwa!')"><div class="gift-icon">🎁</div><p>Zawadi 1</p></div>
-      <div class="gift-box glass" onclick="openGift(this, '💝', 'Upendo wa Familia!')"><div class="gift-icon">💝</div><p>Zawadi 2</p></div>
-      <div class="gift-box glass" onclick="openGift(this, '💎', 'Mafanikio Tele!')"><div class="gift-icon">💎</div><p>Zawadi 3</p></div>
-      <div class="gift-box glass" onclick="openGift(this, '👑', 'Heshima na Baraka!')"><div class="gift-icon">👑</div><p>Zawadi 4</p></div>
-      <div class="gift-box glass" onclick="openGift(this, '🏆', 'Ushindi wa Miaka ${CONFIG.BIRTHDAY_AGE}!')"><div class="gift-icon">🏆</div><p>Zawadi 5</p></div>
-      <div class="gift-box glass" onclick="openGift(this, '⭐', 'Nyota ya Kesho!')"><div class="gift-icon">⭐</div><p>Zawadi 6</p></div>
-    </div>
-
-    <button id="giftBtn" class="btn btn-gift" style="margin-top:30px;">
-      <i class="fas fa-gift"></i> Fungua Zawadi Zote!
+<!-- QUICK ACTIONS -->
+<section class="quick-actions">
+  <h3><i class="fas fa-bolt"></i> Vitendo vya Haraka</h3>
+  <div class="actions-grid">
+    <button class="action-btn fire" onclick="burstFireworks()">
+      <i class="fas fa-fire"></i><span>Fataki</span>
+    </button>
+    <button class="action-btn flower" onclick="burstFlowers()">
+      <i class="fas fa-seedling"></i><span>Maua</span>
+    </button>
+    <button class="action-btn gift" onclick="burstGifts()">
+      <i class="fas fa-gift"></i><span>Zawadi</span>
+    </button>
+    <button class="action-btn party" onclick="startParty()">
+      <i class="fas fa-champagne-glasses"></i><span>Party</span>
     </button>
   </div>
 </section>
 
-<section class="blessing-section glass reveal-page">
-  <h2 class="section-title">✉️ Tuma Baraka Zako</h2>
+<!-- GALLERY -->
+<section class="gallery-card">
+  <h3><i class="fas fa-images"></i> Picha za Kumbukumbu</h3>
+  <div class="photo-grid">
+    ${photos.slice(0, 6).map(p => `
+      <div class="photo-item">
+        <img src="${p.url}" alt="${p.caption}" onerror="this.src='https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=600'">
+        <div class="photo-overlay"><span>${p.caption}</span></div>
+      </div>
+    `).join('')}
+  </div>
+</section>
+
+<!-- WISHES -->
+<section class="wishes-card">
+  <h3><i class="fas fa-star"></i> Matakwa ya Heri</h3>
+  <div class="wishes-list">
+    <div class="wish-chip">🎂 Heri ya Kuzaliwa!</div>
+    <div class="wish-chip">💚 Afya Njema</div>
+    <div class="wish-chip">💰 Mafanikio</div>
+    <div class="wish-chip">😊 Furaha</div>
+    <div class="wish-chip">🙏 Baraka</div>
+    <div class="wish-chip">🚀 Maendeleo</div>
+    <div class="wish-chip">💖 Upendo</div>
+    <div class="wish-chip">⚕️ Uponyaji</div>
+  </div>
+</section>
+`;
+  res.send(layout({ title: 'Nyumbani — Dr. Shadrack', body, active: 'home' }));
+});
+
+/* ═══════════════════════════════════════════════ */
+/* ═══════════ SLASH: /happybirthday ═══════════ */
+/* ═══════════════════════════════════════════════ */
+app.get('/happybirthday', (req, res) => {
+  const body = `
+<div class="birthday-hero">
+  <div class="bday-emoji-row">
+    <span class="bday-emoji">🎉</span>
+    <span class="bday-emoji">🎂</span>
+    <span class="bday-emoji">🎊</span>
+  </div>
+  <h1 class="bday-title">HAPPY BIRTHDAY</h1>
+  <h2 class="bday-name">DR. SHADRACK</h2>
+  <p class="bday-sub">Ahazi Sanga</p>
+  <div class="hero-age-pill">🎊 Miaka ${CONFIG.AGE} 🎊</div>
+</div>
+
+<section class="congrats-section">
+  <h3><i class="fas fa-trophy"></i> Hongera Zako</h3>
+  <div class="congrats-grid">
+    <div class="congrats-item">
+      <div class="cg-icon"><i class="fas fa-stethoscope"></i></div>
+      <h4>Daktari Bingwa</h4>
+      <p>Weledi na upendo kwa wagonjwa</p>
+    </div>
+    <div class="congrats-item">
+      <div class="cg-icon"><i class="fas fa-award"></i></div>
+      <h4>Mafanikio</h4>
+      <p>Miaka ${CONFIG.AGE} ya hekima</p>
+    </div>
+    <div class="congrats-item">
+      <div class="cg-icon"><i class="fas fa-heart"></i></div>
+      <h4>Upendo</h4>
+      <p>Familia inakupenda</p>
+    </div>
+    <div class="congrats-item">
+      <div class="cg-icon"><i class="fas fa-star"></i></div>
+      <h4>Mustakabali</h4>
+      <p>Safari ndefu inakusubiri</p>
+    </div>
+  </div>
+</section>
+
+<section class="message-card">
+  <div class="msg-quote"><i class="fas fa-quote-left"></i></div>
+  <p class="msg-text">"Kaka yetu mpendwa Dr. Shadrack, tunakupenda sana. Umekuwa mfano wetu, mlinzi wetu, na rafiki yetu. Miaka ${CONFIG.AGE} yako iwe ya baraka, furaha na mafanikio makubwa. Mungu akubariki milele!"</p>
+  <div class="msg-sign">— Mdogo wako Mpendwa ❤️</div>
+</section>
+
+<section class="party-controls">
+  <button class="party-btn fire" onclick="burstFireworks(); setInterval(burstFireworks, 300);">
+    <i class="fas fa-fire-flame-curved"></i> Zindua Fataki!
+  </button>
+  <button class="party-btn flower" onclick="burstFlowers()">
+    <i class="fas fa-spa"></i> Tupa Maua!
+  </button>
+  <button class="party-btn gift" onclick="burstGifts()">
+    <i class="fas fa-gifts"></i> Fungua Zawadi!
+  </button>
+</section>
+`;
+  res.send(layout({ title: 'Happy Birthday — Dr. Shadrack', body, active: 'birthday' }));
+});
+
+/* ═══════════════════════════════════════════════ */
+/* ═══════════ SLASH: /dr.shadrack ═════════════ */
+/* ═══════════════════════════════════════════════ */
+app.get('/dr.shadrack', (req, res) => {
+  const body = `
+<div class="profile-hero">
+  <div class="profile-avatar"><i class="fas fa-user-doctor"></i></div>
+  <h1 class="profile-name">DR. SHADRACK</h1>
+  <p class="profile-sub">Ahazi Sanga • Daktari</p>
+  <div class="profile-stats">
+    <div class="stat"><div class="stat-num">${CONFIG.AGE}</div><div class="stat-lbl">Miaka</div></div>
+    <div class="stat"><div class="stat-num">1</div><div class="stat-lbl">First Bro</div></div>
+    <div class="stat"><div class="stat-num">∞</div><div class="stat-lbl">Mapenzi</div></div>
+  </div>
+</div>
+
+<section class="info-card">
+  <h3><i class="fas fa-briefcase-medical"></i> Kitaalamu</h3>
+  <p>Daktari wa binadamu mwenye maono makubwa, anayeamini katika kutoa huduma ya afya yenye usawa, weledi, na upendo wa dhati.</p>
+</section>
+
+<section class="info-card">
+  <h3><i class="fas fa-crown"></i> Kifamilia</h3>
+  <p>Kaka mkubwa (First Bro) wa mfano, msikilizaji mzuri, na mtu mwenye upendo usio na kikomo kwa familia yake.</p>
+</section>
+
+<section class="timeline-card">
+  <h3><i class="fas fa-timeline"></i> Safari ya Maisha</h3>
+  <div class="timeline-list">
+    <div class="tl-item"><div class="tl-dot"></div><div class="tl-content"><div class="tl-year">2002</div><h4>Kuzaliwa 🎂</h4><p>Alizaliwa tarehe 2 Octoba</p></div></div>
+    <div class="tl-item"><div class="tl-dot"></div><div class="tl-content"><div class="tl-year">2018</div><h4>Chuo Kikuu 🎓</h4><p>Alianza safari ya Udaktari</p></div></div>
+    <div class="tl-item"><div class="tl-dot"></div><div class="tl-content"><div class="tl-year">2023</div><h4>Kuwa Daktari 🩺</h4><p>Alihitimu kama Daktari!</p></div></div>
+    <div class="tl-item"><div class="tl-dot"></div><div class="tl-content"><div class="tl-year">2026</div><h4>Miaka ${CONFIG.AGE} 🎉</h4><p>Tunasherehekea!</p></div></div>
+  </div>
+</section>
+`;
+  res.send(layout({ title: 'Dr. Shadrack — Wasifu', body, active: 'profile' }));
+});
+
+/* ═══════════════════════════════════════════════ */
+/* ═══════════ SLASH: /gift ═══════════════════ */
+/* ═══════════════════════════════════════════════ */
+app.get('/gift', (req, res) => {
+  const body = `
+<div class="gift-hero">
+  <h1 class="gift-title"><i class="fas fa-gift"></i> ZAWADI</h1>
+  <p class="gift-sub">Fungua zawadi za upendo</p>
+</div>
+
+<section class="gifts-container">
+  <div class="gift-box" onclick="openGift(this, '🎁', 'Heri ya Kuzaliwa!')">
+    <div class="gift-inner"><i class="fas fa-gift"></i></div>
+    <div class="gift-label">Zawadi 1</div>
+  </div>
+  <div class="gift-box" onclick="openGift(this, '💝', 'Upendo wa Familia!')">
+    <div class="gift-inner"><i class="fas fa-heart"></i></div>
+    <div class="gift-label">Zawadi 2</div>
+  </div>
+  <div class="gift-box" onclick="openGift(this, '💎', 'Mafanikio Tele!')">
+    <div class="gift-inner"><i class="fas fa-gem"></i></div>
+    <div class="gift-label">Zawadi 3</div>
+  </div>
+  <div class="gift-box" onclick="openGift(this, '👑', 'Heshima na Baraka!')">
+    <div class="gift-inner"><i class="fas fa-crown"></i></div>
+    <div class="gift-label">Zawadi 4</div>
+  </div>
+  <div class="gift-box" onclick="openGift(this, '🏆', 'Ushindi!')">
+    <div class="gift-inner"><i class="fas fa-trophy"></i></div>
+    <div class="gift-label">Zawadi 5</div>
+  </div>
+  <div class="gift-box" onclick="openGift(this, '⭐', 'Nyota ya Kesho!')">
+    <div class="gift-inner"><i class="fas fa-star"></i></div>
+    <div class="gift-label">Zawadi 6</div>
+  </div>
+</section>
+
+<section class="blessing-card">
+  <h3><i class="fas fa-envelope-open-text"></i> Tuma Baraka Zako</h3>
   <form id="blessingForm" class="blessing-form">
     <input type="text" id="blessName" placeholder="Jina Lako" required>
     <select id="blessRelation" required>
@@ -440,90 +432,93 @@ ${NAVBAR_HTML}
       <option value="Daktari Mwenzake">Daktari Mwenzake</option>
     </select>
     <textarea id="blessMsg" placeholder="Andika ujumbe wako..." rows="4" required></textarea>
-    <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Tuma Ujumbe</button>
+    <button type="submit" class="btn-send">
+      <i class="fas fa-paper-plane"></i> Tuma Ujumbe
+    </button>
   </form>
   <div id="blessingList" class="blessing-list"></div>
 </section>
-
-${FOOTER_HTML}
-
-<script>
-function openGift(el, emoji, message) {
-  el.classList.add('opened');
-  el.querySelector('.gift-icon').textContent = emoji;
-  setTimeout(() => alert('🎉 ' + message), 300);
-  if (typeof burstGifts === 'function') {
-    const rect = el.getBoundingClientRect();
-    burstGifts(rect.left + rect.width/2, rect.top);
-  }
-}
-</script>
-</body>
-</html>`);
+`;
+  res.send(layout({ title: 'Zawadi — Dr. Shadrack', body, active: 'gift' }));
 });
 
-/* ──────── /ADMIN (LOGIN) ──────── */
+/* ═══════════════════════════════════════════════ */
+/* ═══════════ SLASH: /music ═══════════════════ */
+/* ═══════════════════════════════════════════════ */
+app.get('/music', (req, res) => {
+  const body = `
+<div class="music-hero">
+  <div class="music-disc"><i class="fas fa-compact-disc"></i></div>
+  <h1 class="music-title">Muziki wa Sherehe</h1>
+  <p class="music-sub">Sikiliza nyimbo za furaha</p>
+</div>
+
+<section class="music-controls">
+  <button class="music-btn big" onclick="document.getElementById('musicToggle').click()">
+    <i class="fas fa-play-circle"></i> Cheza / Simamisha
+  </button>
+</section>
+
+<section class="playlist-card">
+  <h3><i class="fas fa-list-music"></i> Playlist</h3>
+  <div class="playlist-item"><i class="fas fa-music"></i> Happy Birthday Song</div>
+  <div class="playlist-item"><i class="fas fa-music"></i> Celebration Mix</div>
+  <div class="playlist-item"><i class="fas fa-music"></i> Party Vibes</div>
+</section>
+`;
+  res.send(layout({ title: 'Muziki — Dr. Shadrack', body, active: 'music' }));
+});
+
+/* ═══════════════════════════════════════════════ */
+/* ═══════════ SLASH: /admin ═══════════════════ */
+/* ═══════════════════════════════════════════════ */
 app.get('/admin', (req, res) => {
-  if (req.session && req.session.isAdmin) return res.redirect('/admin/dashboard');
-  res.send(renderAdminLogin());
+  if (req.session.isAdmin) return res.redirect('/admin/dashboard');
+  const body = `
+<div class="login-container">
+  <div class="login-card">
+    <div class="login-lock"><i class="fas fa-lock"></i></div>
+    <h1 class="login-title">Admin Login</h1>
+    <p class="login-sub">Ingiza taarifa zako</p>
+    ${req.query.error ? '<div class="login-error"><i class="fas fa-times-circle"></i> Jina au neno la siri si sahihi!</div>' : ''}
+    <form method="POST" action="/admin">
+      <div class="form-group">
+        <i class="fas fa-user"></i>
+        <input type="text" name="username" placeholder="Jina la Admin" required>
+      </div>
+      <div class="form-group">
+        <i class="fas fa-key"></i>
+        <input type="password" name="password" placeholder="Neno la Siri" required>
+      </div>
+      <button type="submit" class="btn-login">
+        <i class="fas fa-sign-in-alt"></i> Ingia
+      </button>
+    </form>
+    <div class="login-hint">💡 Default: <b>admin</b> / <b>shadrack2026</b></div>
+    <a href="/" class="login-back"><i class="fas fa-arrow-left"></i> Rudi Nyumbani</a>
+  </div>
+</div>
+`;
+  res.send(layout({ title: 'Admin — Dr. Shadrack', body, active: 'admin' }));
 });
 
 app.post('/admin', (req, res) => {
   const { username, password } = req.body;
-  if (username === CONFIG.ADMIN_USERNAME && password === CONFIG.ADMIN_PASSWORD) {
+  if (username === CONFIG.ADMIN_USER && password === CONFIG.ADMIN_PASS) {
     req.session.isAdmin = true;
-    req.session.username = username;
     return res.redirect('/admin/dashboard');
   }
-  res.send(renderAdminLogin('❌ Jina au neno la siri si sahihi!'));
+  res.redirect('/admin?error=1');
 });
 
-function renderAdminLogin(error = '') {
-  return `<!DOCTYPE html>
-<html lang="sw">
-<head>${HEAD_HTML}<title>Admin Login — ALS</title></head>
-<body>
-<div id="adminIntro">
-  <div class="slash slash-a"></div><div class="slash slash-b"></div>
-  <div class="slash slash-c"></div><div class="slash slash-d"></div>
-  <div class="slash slash-e"></div><div class="slash slash-f"></div>
-  <div class="admin-intro-text">
-    <h1>🔐 ADMIN ACCESS</h1>
-    <p>Dr. Shadrack Birthday Portal</p>
-    <p class="als-brand">Powered by AiliFesolution (ALS)</p>
-  </div>
-</div>
+app.get('/admin/logout', (req, res) => {
+  req.session.destroy();
+  res.redirect('/');
+});
 
-<div class="login-wrapper">
-  <div class="login-box glass">
-    <div class="lock-icon">🔒</div>
-    <h1>Admin Login</h1>
-    <p class="login-sub">Ingiza neno la siri kuingia</p>
-    ${error ? `<p class="error-msg">${error}</p>` : ''}
-    <form method="POST" action="/admin">
-      <div class="input-group">
-        <span class="input-icon">👤</span>
-        <input type="text" name="username" placeholder="Jina la Admin" autocomplete="off" required>
-      </div>
-      <div class="input-group">
-        <span class="input-icon">🔑</span>
-        <input type="password" name="password" placeholder="Neno la Siri" required>
-      </div>
-      <button type="submit" class="btn-login">🚀 Ingia</button>
-    </form>
-    <p class="hint">💡 Default: <b>admin</b> / <b>shadrack2026</b></p>
-    <a href="/" class="back-link">← Rudi kwenye Website</a>
-  </div>
-</div>
-
-<script>setTimeout(()=>document.getElementById('adminIntro').classList.add('hide'),2500);</script>
-</body>
-</html>`;
-}
-
-/* ──────── /ADMIN/DASHBOARD ──────── */
+/* ═══════════ ADMIN DASHBOARD ═══════════ */
 function requireAuth(req, res, next) {
-  if (req.session && req.session.isAdmin) return next();
+  if (req.session.isAdmin) return next();
   res.redirect('/admin');
 }
 
@@ -532,116 +527,101 @@ app.get('/admin/dashboard', requireAuth, (req, res) => {
   const timeline = readData('timeline.json');
   const blessings = readData('blessings.json');
 
-  res.send(`<!DOCTYPE html>
-<html lang="sw">
-<head>${HEAD_HTML}<title>Dashboard — Dr. Shadrack</title></head>
-<body>
-<div class="dashboard">
-  <header class="dash-header glass">
-    <h1>🎛️ Admin Dashboard — Dr. Shadrack</h1>
-    <div class="dash-actions">
-      <a href="/home" class="btn-dash">🏠 Tazama Site</a>
-      <a href="/admin/logout" class="btn-dash danger">🚪 Toka</a>
-    </div>
-  </header>
+  const body = `
+<div class="dashboard-header">
+  <h1><i class="fas fa-sliders"></i> Admin Dashboard</h1>
+  <div class="dash-actions">
+    <a href="/home" class="dash-btn"><i class="fas fa-eye"></i> Tazama</a>
+    <a href="/admin/logout" class="dash-btn danger"><i class="fas fa-sign-out-alt"></i> Toka</a>
+  </div>
+</div>
 
-  <div class="dash-grid">
-    <div class="dash-card glass">
-      <h2>📸 Ongeza Picha</h2>
-      <input type="text" id="photoUrl" placeholder="URL ya picha (https://...)">
-      <input type="text" id="photoCaption" placeholder="Maelezo">
-      <button id="addPhotoBtn" class="btn-dash primary">➕ Ongeza Picha</button>
-      <div id="photoList" class="item-list">
-        ${gallery.map(g => `<div class="item-row"><span>${g.caption}</span><button onclick="deletePhoto(${g.id})">🗑️</button></div>`).join('')}
-      </div>
-    </div>
+<div class="dashboard-stats">
+  <div class="stat-card">
+    <i class="fas fa-image"></i>
+    <div class="stat-num">${gallery.length}</div>
+    <div class="stat-lbl">Picha</div>
+  </div>
+  <div class="stat-card">
+    <i class="fas fa-timeline"></i>
+    <div class="stat-num">${timeline.length}</div>
+    <div class="stat-lbl">Historia</div>
+  </div>
+  <div class="stat-card">
+    <i class="fas fa-comment-dots"></i>
+    <div class="stat-num">${blessings.length}</div>
+    <div class="stat-lbl">Baraka</div>
+  </div>
+</div>
 
-    <div class="dash-card glass">
-      <h2>📖 Ongeza Historia</h2>
-      <input type="text" id="tlYear" placeholder="Mwaka">
-      <input type="text" id="tlTitle" placeholder="Kichwa">
-      <textarea id="tlText" placeholder="Maelezo..." rows="3"></textarea>
-      <button id="addTlBtn" class="btn-dash primary">➕ Ongeza</button>
-      <div id="tlList" class="item-list">
-        ${timeline.map(t => `<div class="item-row"><span>${t.year} - ${t.title}</span><button onclick="deleteTl(${t.id})">🗑️</button></div>`).join('')}
-      </div>
+<div class="dashboard-sections">
+  <!-- ADD PHOTO -->
+  <div class="dash-card">
+    <h2><i class="fas fa-plus-circle"></i> Ongeza Picha</h2>
+    <input type="text" id="photoUrl" placeholder="URL ya picha (https://...)">
+    <input type="text" id="photoCaption" placeholder="Maelezo ya picha">
+    <button id="addPhotoBtn" class="dash-submit">
+      <i class="fas fa-upload"></i> Ongeza Picha
+    </button>
+    <div id="photoList" class="item-list">
+      ${gallery.map(g => `
+        <div class="item-row">
+          <img src="${g.url}" class="item-thumb">
+          <span>${g.caption}</span>
+          <button onclick="deletePhoto(${g.id})" class="item-del"><i class="fas fa-trash"></i></button>
+        </div>
+      `).join('')}
     </div>
+  </div>
 
-    <div class="dash-card glass">
-      <h2>📊 Takwimu</h2>
-      <p>📸 Picha: <b>${gallery.length}</b></p>
-      <p>📖 Historia: <b>${timeline.length}</b></p>
-      <p>💬 Baraka: <b>${blessings.length}</b></p>
-      <hr>
-      <p style="opacity:0.7;font-size:0.85rem;">Powered by <b>AiliFesolution (ALS)</b></p>
+  <!-- ADD TIMELINE -->
+  <div class="dash-card">
+    <h2><i class="fas fa-plus-circle"></i> Ongeza Historia</h2>
+    <input type="text" id="tlYear" placeholder="Mwaka">
+    <input type="text" id="tlTitle" placeholder="Kichwa">
+    <textarea id="tlText" placeholder="Maelezo..." rows="3"></textarea>
+    <button id="addTlBtn" class="dash-submit">
+      <i class="fas fa-upload"></i> Ongeza
+    </button>
+    <div id="tlList" class="item-list">
+      ${timeline.map(t => `
+        <div class="item-row">
+          <span><b>${t.year}</b> - ${t.title}</span>
+          <button onclick="deleteTl(${t.id})" class="item-del"><i class="fas fa-trash"></i></button>
+        </div>
+      `).join('')}
     </div>
+  </div>
 
-    <div class="dash-card glass">
-      <h2>💬 Baraka za Hivi Karibuni</h2>
-      <div class="item-list">
-        ${blessings.slice(-5).reverse().map(b => `
-          <div class="item-row">
-            <span><b>${b.name}</b>: ${b.msg.substring(0, 40)}...</span>
-            <button onclick="deleteBless(${b.id})">🗑️</button>
-          </div>
-        `).join('')}
-      </div>
+  <!-- BLESSINGS -->
+  <div class="dash-card full">
+    <h2><i class="fas fa-comments"></i> Baraka za Wageni</h2>
+    <div class="item-list">
+      ${blessings.slice(-10).reverse().map(b => `
+        <div class="item-row">
+          <span><b>${b.name}</b> (${b.relation}): ${b.msg.substring(0, 60)}...</span>
+          <button onclick="deleteBless(${b.id})" class="item-del"><i class="fas fa-trash"></i></button>
+        </div>
+      `).join('') || '<div class="item-empty">Hakuna baraka bado</div>'}
     </div>
   </div>
 </div>
 
-<script>
-async function api(url, method='GET', body=null) {
-  const opts = { method, headers: { 'Content-Type': 'application/json' } };
-  if (body) opts.body = JSON.stringify(body);
-  const res = await fetch(url, opts);
-  return res.json();
-}
-document.getElementById('addPhotoBtn')?.addEventListener('click', async () => {
-  const url = document.getElementById('photoUrl').value.trim();
-  const caption = document.getElementById('photoCaption').value.trim() || 'Picha 🎉';
-  if (!url) return alert('Weka URL ya picha!');
-  const data = await api('/api/gallery', 'POST', { url, caption });
-  if (data.success) location.reload();
-  else alert('Kosa: ' + data.message);
-});
-document.getElementById('addTlBtn')?.addEventListener('click', async () => {
-  const year = document.getElementById('tlYear').value.trim();
-  const title = document.getElementById('tlTitle').value.trim();
-  const text = document.getElementById('tlText').value.trim();
-  if (!year || !title || !text) return alert('Jaza sehemu zote!');
-  const data = await api('/api/timeline', 'POST', { year, title, text });
-  if (data.success) location.reload();
-  else alert('Kosa: ' + data.message);
-});
-window.deletePhoto = async (id) => { if (confirm('Una uhakika?')) { await api('/api/gallery/'+id, 'DELETE'); location.reload(); } };
-window.deleteTl = async (id) => { if (confirm('Una uhakika?')) { await api('/api/timeline/'+id, 'DELETE'); location.reload(); } };
-window.deleteBless = async (id) => { if (confirm('Una uhakika?')) { await api('/api/blessings/'+id, 'DELETE'); location.reload(); } };
-</script>
-</body>
-</html>`);
+<script src="/js/admin.js"></script>
+`;
+  res.send(layout({ title: 'Dashboard — Admin', body, active: 'admin' }));
 });
 
-/* ──────── /ADMIN/LOGOUT ──────── */
-app.get('/admin/logout', (req, res) => {
-  req.session.destroy();
-  res.redirect('/admin');
-});
-
-/* ═══════════════════════════════════════════════════════ */
-/* ═══════════════════ API ENDPOINTS ══════════════════ */
-/* ═══════════════════════════════════════════════════════ */
-
-/* Gallery */
-app.get('/api/gallery', (req, res) => {
-  res.json({ success: true, data: readData('gallery.json') });
-});
+/* ═══════════════════════════════════════════════ */
+/* ═══════════ API ENDPOINTS ═══════════════════ */
+/* ═══════════════════════════════════════════════ */
+app.get('/api/gallery', (req, res) => res.json({ success: true, data: readData('gallery.json') }));
 
 app.post('/api/gallery', requireAuth, (req, res) => {
   const { url, caption } = req.body;
   if (!url) return res.status(400).json({ success: false, message: 'URL inahitajika' });
   const gallery = readData('gallery.json');
-  const newItem = { id: Date.now(), url, caption: caption || 'Picha 🎉', createdAt: new Date().toISOString() };
+  const newItem = { id: Date.now(), url, caption: caption || 'Picha', createdAt: new Date().toISOString() };
   gallery.push(newItem);
   writeData('gallery.json', gallery);
   res.json({ success: true, data: newItem });
@@ -649,20 +629,15 @@ app.post('/api/gallery', requireAuth, (req, res) => {
 
 app.delete('/api/gallery/:id', requireAuth, (req, res) => {
   const id = parseInt(req.params.id);
-  let gallery = readData('gallery.json');
-  gallery = gallery.filter(g => g.id !== id);
-  writeData('gallery.json', gallery);
+  writeData('gallery.json', readData('gallery.json').filter(g => g.id !== id));
   res.json({ success: true });
 });
 
-/* Timeline */
-app.get('/api/timeline', (req, res) => {
-  res.json({ success: true, data: readData('timeline.json') });
-});
+app.get('/api/timeline', (req, res) => res.json({ success: true, data: readData('timeline.json') }));
 
 app.post('/api/timeline', requireAuth, (req, res) => {
   const { year, title, text } = req.body;
-  if (!year || !title || !text) return res.status(400).json({ success: false, message: 'Jaza sehemu zote!' });
+  if (!year || !title || !text) return res.status(400).json({ success: false, message: 'Jaza zote!' });
   const timeline = readData('timeline.json');
   const newItem = { id: Date.now(), year, title, text, createdAt: new Date().toISOString() };
   timeline.push(newItem);
@@ -672,13 +647,10 @@ app.post('/api/timeline', requireAuth, (req, res) => {
 
 app.delete('/api/timeline/:id', requireAuth, (req, res) => {
   const id = parseInt(req.params.id);
-  let timeline = readData('timeline.json');
-  timeline = timeline.filter(t => t.id !== id);
-  writeData('timeline.json', timeline);
+  writeData('timeline.json', readData('timeline.json').filter(t => t.id !== id));
   res.json({ success: true });
 });
 
-/* Blessings */
 app.get('/api/blessings', (req, res) => {
   const blessings = readData('blessings.json');
   res.json({ success: true, data: blessings.slice(-20).reverse() });
@@ -686,7 +658,7 @@ app.get('/api/blessings', (req, res) => {
 
 app.post('/api/blessings', (req, res) => {
   const { name, relation, msg } = req.body;
-  if (!name || !relation || !msg) return res.status(400).json({ success: false, message: 'Jaza sehemu zote!' });
+  if (!name || !relation || !msg) return res.status(400).json({ success: false, message: 'Jaza zote!' });
   const blessings = readData('blessings.json');
   const newItem = {
     id: Date.now(), name, relation, msg,
@@ -700,88 +672,43 @@ app.post('/api/blessings', (req, res) => {
 
 app.delete('/api/blessings/:id', requireAuth, (req, res) => {
   const id = parseInt(req.params.id);
-  let blessings = readData('blessings.json');
-  blessings = blessings.filter(b => b.id !== id);
-  writeData('blessings.json', blessings);
+  writeData('blessings.json', readData('blessings.json').filter(b => b.id !== id));
   res.json({ success: true });
 });
 
-/* Stats */
-app.get('/api/stats', (req, res) => {
-  res.json({
-    success: true,
-    data: {
-      photos: readData('gallery.json').length,
-      timeline: readData('timeline.json').length,
-      blessings: readData('blessings.json').length,
-      company: CONFIG.COMPANY_NAME,
-      birthday: CONFIG.BIRTHDAY_NAME,
-      age: CONFIG.BIRTHDAY_AGE
-    }
-  });
-});
-
-/* Health check kwa Heroku */
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', uptime: process.uptime() });
-});
-
-/* ═══════════════════════════════════════════════════════ */
-/* ═══════════════════ 404 HANDLER ════════════════════ */
-/* ═══════════════════════════════════════════════════════ */
+/* ═══════════ 404 ═══════════ */
 app.use((req, res) => {
-  res.status(404).send(`<!DOCTYPE html>
-<html lang="sw">
-<head>${HEAD_HTML}<title>404 — Haipatikani</title></head>
-<body style="display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px;">
-  <div class="glass" style="padding:60px 40px;text-align:center;max-width:500px;">
-    <h1 style="font-size:6rem;color:var(--gold);text-shadow:0 0 40px var(--gold);">404</h1>
-    <h2 style="margin:20px 0;color:var(--primary);">Ukurasa Haupatikani!</h2>
-    <p style="opacity:0.7;margin-bottom:30px;">Path: <code>${req.path}</code></p>
-    <a href="/" class="btn btn-primary" style="text-decoration:none;">🏠 Rudi Nyumbani</a>
-  </div>
-</body>
-</html>`);
+  const body = `
+<div class="error-404">
+  <div class="error-emoji">🔍</div>
+  <h1>404</h1>
+  <p>Ukurasa haupatikani!</p>
+  <a href="/" class="btn-main"><i class="fas fa-home"></i> Rudi Nyumbani</a>
+</div>
+`;
+  res.status(404).send(layout({ title: '404', body, active: 'error' }));
 });
 
-/* ═══════════ ERROR HANDLER ═══════════ */
 app.use((err, req, res, next) => {
-  console.error('❌ ERROR:', err);
-  res.status(500).json({ success: false, message: 'Hitilafu ya server', error: err.message });
+  console.error('❌', err);
+  res.status(500).json({ success: false, error: err.message });
 });
 
-/* ═══════════════════════════════════════════════════════ */
-/* ═══════════════════ START SERVER ═══════════════════ */
-/* ═══════════════════════════════════════════════════════ */
+process.on('uncaughtException', e => console.error('💥', e));
+process.on('unhandledRejection', e => console.error('💥', e));
+
 app.listen(PORT, '0.0.0.0', () => {
-  console.log('\n╔══════════════════════════════════════════════════════╗');
-  console.log('║                                                      ║');
-  console.log('║   🎂  AILIFESOLUTION (ALS) BIRTHDAY PORTAL  🎂      ║');
-  console.log('║                                                      ║');
-  console.log('║   🎉  Dr. Shadrack Ahazi Sanga — Miaka 24          ║');
-  console.log('║                                                      ║');
-  console.log('╚══════════════════════════════════════════════════════╝\n');
-  console.log(`✅ Server: http://localhost:${PORT}`);
-  console.log(`\n📌 SLASHES ZINAZOPATIKANA:\n`);
-  console.log(`   🏠  /                    → Welcome`);
-  console.log(`   🏠  /welcome             → Welcome (alt)`);
-  console.log(`   🏠  /home                → Home`);
-  console.log(`   🎂  /happybirthday       → Happy Birthday`);
-  console.log(`   ⚕️   /dr.shadrack         → Dr. Shadrack`);
-  console.log(`   🎁  /gift                → Gift`);
-  console.log(`   🔐  /admin               → Admin Login`);
-  console.log(`   📊  /admin/dashboard     → Admin Dashboard`);
-  console.log(`   🔌  /api/gallery          → Gallery API`);
-  console.log(`   🔌  /api/blessings        → Blessings API\n`);
-  console.log(`👤 Admin: ${CONFIG.ADMIN_USERNAME} / ${CONFIG.ADMIN_PASSWORD}`);
-  console.log(`\n© 2026 AiliFesolution (ALS)\n`);
-});
-
-/* ═══════════ ERROR HANDLING KWA HEROKU ═══════════ */
-process.on('uncaughtException', (err) => {
-  console.error('💥 UNCAUGHT EXCEPTION:', err);
-});
-
-process.on('unhandledRejection', (err) => {
-  console.error('💥 UNHANDLED REJECTION:', err);
+  console.log(`\n╔══════════════════════════════════════════════╗`);
+  console.log(`║  🎂 AILIFESOLUTION (ALS) — BIRTHDAY APP  🎂 ║`);
+  console.log(`╚══════════════════════════════════════════════╝`);
+  console.log(`✅ Server: http://localhost:${PORT}\n`);
+  console.log(`📌 SLASHES:`);
+  console.log(`   /                → Welcome`);
+  console.log(`   /home            → Home`);
+  console.log(`   /happybirthday   → Birthday`);
+  console.log(`   /dr.shadrack     → Profile`);
+  console.log(`   /gift            → Zawadi`);
+  console.log(`   /music           → Muziki`);
+  console.log(`   /admin           → Admin Login`);
+  console.log(`   /admin/dashboard → Dashboard\n`);
 });
