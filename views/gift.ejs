@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+<%- include('partials/head') %>
+</head>
+<body class="page-gift">
+
+<canvas id="fireworks"></canvas>
+<canvas id="confetti"></canvas>
+<canvas id="flowers"></canvas>
+
+<%- include('partials/navbar') %>
+
+<section class="page-hero">
+  <div class="glass page-hero-content">
+    <h1 class="main-title">🎁 ZAWADI KWA DR. SHADRACK 🎁</h1>
+    <p class="tribute">Fungua zawadi zako za upendo!</p>
+
+    <div class="gifts-grid">
+      <div class="gift-box glass" onclick="openGift(this, '🎁', 'Heri ya Kuzaliwa!')">
+        <div class="gift-icon">🎁</div>
+        <p>Zawadi 1</p>
+      </div>
+      <div class="gift-box glass" onclick="openGift(this, '💝', 'Upendo wa Familia!')">
+        <div class="gift-icon">💝</div>
+        <p>Zawadi 2</p>
+      </div>
+      <div class="gift-box glass" onclick="openGift(this, '💎', 'Mafanikio Tele!')">
+        <div class="gift-icon">💎</div>
+        <p>Zawadi 3</p>
+      </div>
+      <div class="gift-box glass" onclick="openGift(this, '👑', 'Heshima na Baraka!')">
+        <div class="gift-icon">👑</div>
+        <p>Zawadi 4</p>
+      </div>
+      <div class="gift-box glass" onclick="openGift(this, '🏆', 'Ushindi wa Miaka 24!')">
+        <div class="gift-icon">🏆</div>
+        <p>Zawadi 5</p>
+      </div>
+      <div class="gift-box glass" onclick="openGift(this, '⭐', 'Nyota ya Kesho!')">
+        <div class="gift-icon">⭐</div>
+        <p>Zawadi 6</p>
+      </div>
+    </div>
+
+    <button id="giftBtn" class="btn btn-gift" style="margin-top: 30px;">
+      <i class="fas fa-gift"></i> Fungua Zawadi Zote!
+    </button>
+  </div>
+</section>
+
+<!-- BLESSING FORM -->
+<section class="blessing-section glass reveal-page">
+  <h2 class="section-title">✉️ Tuma Baraka Zako</h2>
+  <form id="blessingForm" class="blessing-form">
+    <input type="text" id="blessName" placeholder="Jina Lako" required>
+    <select id="blessRelation" required>
+      <option value="">Chagua Uhusiano...</option>
+      <option value="Ndugu">Ndugu</option>
+      <option value="Rafiki">Rafiki</option>
+      <option value="Mzazi">Mzazi</option>
+      <option value="Mgonjwa">Mgonjwa</option>
+      <option value="Daktari Mwenzake">Daktari Mwenzake</option>
+    </select>
+    <textarea id="blessMsg" placeholder="Andika ujumbe wako..." rows="4" required></textarea>
+    <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Tuma Ujumbe</button>
+  </form>
+  <div id="blessingList" class="blessing-list"></div>
+</section>
+
+<%- include('partials/footer') %>
+
+<audio id="bgMusic" loop>
+  <source src="/audio/birthday-song.mp3" type="audio/mpeg">
+</audio>
+
+<script src="/js/script.js"></script>
+<script>
+function openGift(el, emoji, message) {
+  el.classList.add('opened');
+  el.querySelector('.gift-icon').textContent = emoji;
+  setTimeout(() => alert('🎉 ' + message), 300);
+  burstGifts(el.getBoundingClientRect().left + el.offsetWidth/2, el.getBoundingClientRect().top);
+}
+</script>
+</body>
+</html>
