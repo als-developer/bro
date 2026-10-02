@@ -193,4 +193,226 @@ function burstGifts() {
   for (let i = 0; i < 15; i++) {
     const el = document.createElement('div');
     el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-    el.style
+    el.style.cssText = `
+      position: fixed;
+      left: ${cx}px; top: ${cy}px;
+      font-size: ${Math.random() * 20 + 30}px;
+      pointer-events: none; z-index: 9999;
+      transition: all 2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      filter: drop-shadow(0 0 15px gold);
+    `;
+    document.body.appendChild(el);
+    requestAnimationFrame(() => {
+      el.style.left = (cx + (Math.random() * 500 - 250)) + 'px';
+      el.style.top = (cy + (Math.random() * 500 - 250)) + 'px';
+      el.style.opacity = '0';
+      el.style.transform = `rotate(${Math.random() * 720}deg) scale(1.5)`;
+    });
+    setTimeout(() => el.remove(), 2200);
+  }
+}
+
+/* ═══════════ PARTY MODE ═══════════ */
+function startParty() {
+  burstFireworks();
+  burstFlowers();
+  burstGifts();
+  playSound(880, 0.1);
+}
+
+/* ═══════════ OPEN GIFT ═══════════ */
+function openGift(el, emoji, message) {
+  if (el.classList.contains('opened')) return;
+  el.classList.add('opened');
+  const icon = el.querySelector('.gift-inner');
+  if (icon) icon.innerHTML = `<span style="font-size:2rem">${emoji}</span>`;
+  playSound(660, 0.15);
+  burstFireworks();
+  setTimeout(() => {
+    showToast('🎉 ' + message);
+  }, 300);
+}
+
+/* ═══════════ TOAST ═══════════ */
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.textContent = msg;
+  t.style.cssText = `
+    position: fixed;
+    bottom: calc(75px + 80px);
+    left: 50%;
+    transform: translateX(-50%) translateY(30px);
+    background: linear-gradient(135deg, #ff2d95, #8b2fc9);
+    color: #fff;
+    padding: 14px 24px;
+    border-radius: 50px;
+    font-family: Poppins, sans-serif;
+    font-weight: 600;
+    font-size: 0.9rem;
+    box-shadow: 0 10px 40px rgba(255,45,149,0.6);
+    z-index: 99999;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    opacity: 0;
+    pointer-events: none;
+  `;
+  document.body.appendChild(t);
+  requestAnimationFrame(() => {
+    t.style.opacity = '1';
+    t.style.transform = 'translateX(-50%) translateY(0)';
+  });
+  setTimeout(() => {
+    t.style.opacity = '0';
+    t.style.transform = 'translateX(-50%) translateY(30px)';
+    setTimeout(() => t.remove(), 400);
+  }, 2500);
+}
+
+/* ═══════════ SOUND ═══════════ */
+let audioCtx;
+function playSound(freq, dur) {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(freq * 0.5, audioCtx.currentTime + dur);
+    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + dur);
+    osc.start(audioCtx.currentTime);
+    osc.stop(audioCtx.currentTime + dur);
+  } catch(e) {}
+}
+
+/* ═══════════ COUNTDOWN ═══════════ */
+const bdayDate = new Date('2026-10-02T00:00:00').getTime();
+function updateCountdown() {
+  const days = document.getElementById('days');
+  if (!days) return;
+  const now = Date.now();
+  const diff = bdayDate - now;
+  if (diff <= 0) {
+    days.textContent = '🎉';
+    document.getElementById('hours').textContent = '🎂';
+    document.getElementById('minutes').textContent = '🎈';
+    document.getElementById('seconds').textContent = '🎊';
+    return;
+  }
+  document.getElementById('days').textContent = String(Math.floor(diff / 86400000)).padStart(2, '0');
+  document.getElementById('hours').textContent = String(Math.floor((diff % 86400000) / 3600000)).padStart(2, '0');
+  document.getElementById('minutes').textContent = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
+  document.getElementById('seconds').textContent = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
+}
+setInterval(updateCountdown, 1000);
+updateCountdown();
+
+/* ═══════════ MUSIC ═══════════ */
+const music = document.getElementById('bgMusic');
+const musicBtn = document.getElementById('musicToggle');
+let musicPlaying = false;
+
+if (musicBtn) {
+  musicBtn.addEventListener('click', () => {
+    if (!musicPlaying) {
+      music.play().then(() => {
+        musicPlaying = true;
+        musicBtn.classList.add('playing');
+        musicBtn.innerHTML = '<i class="fas fa-pause"></i>';
+        showToast('🎵 Muziki umeanza!');
+      }).catch(() => {
+        showToast('⚠️ Bofya tena kuwasha muziki');
+      });
+    } else {
+      music.pause();
+      musicPlaying = false;
+      musicBtn.classList.remove('playing');
+      musicBtn.innerHTML = '<i class="fas fa-play"></i>';
+    }
+  });
+}
+
+/* ═══════════ BLESSING FORM ═══════════ */
+const blessForm = document.getElementById('blessingForm');
+const blessList = document.getElementById('blessingList');
+
+async function loadBlessings() {
+  if (!blessList) return;
+  try {
+    const res = await fetch('/api/blessings');
+    const data = await res.json();
+    if (data.success) renderBlessings(data.data);
+  } catch(e) {}
+}
+
+function renderBlessings(list) {
+  if (!blessList) return;
+  if (!list || list.length === 0) {
+    blessList.innerHTML = '<div class="item-empty">Hakuna baraka bado. Kuwa wa kwanza!</div>';
+    return;
+  }
+  blessList.innerHTML = list.map(b => `
+    <div class="bless-item">
+      <h4>💝 ${b.name} <small>(${b.relation})</small></h4>
+      <p>${b.msg}</p>
+      <small>📅 ${b.date}</small>
+    </div>
+  `).join('');
+}
+
+if (blessForm) {
+  blessForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    const name = document.getElementById('blessName').value.trim();
+    const relation = document.getElementById('blessRelation').value;
+    const msg = document.getElementById('blessMsg').value.trim();
+    if (!name || !relation || !msg) return;
+
+    try {
+      const res = await fetch('/api/blessings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, relation, msg })
+      });
+      const data = await res.json();
+      if (data.success) {
+        blessForm.reset();
+        loadBlessings();
+        burstFireworks();
+        burstGifts();
+        showToast('✅ Baraka zako zimetumwa!');
+      }
+    } catch(e) {
+      showToast('❌ Hitilafu ya mtandao');
+    }
+  });
+
+  loadBlessings();
+}
+
+/* ═══════════ TOUCH RIPPLE ═══════════ */
+document.addEventListener('click', e => {
+  const btn = e.target.closest('.btn-main, .btn-sec, .action-btn, .party-btn, .dash-submit, .btn-login, .btn-send');
+  if (!btn) return;
+  const rect = btn.getBoundingClientRect();
+  const ripple = document.createElement('span');
+  const size = Math.max(rect.width, rect.height);
+  ripple.style.cssText = `
+    position: absolute;
+    left: ${e.clientX - rect.left - size/2}px;
+    top: ${e.clientY - rect.top - size/2}px;
+    width: ${size}px; height: ${size}px;
+    background: rgba(255,255,255,0.4);
+    border-radius: 50%;
+    transform: scale(0);
+    pointer-events: none;
+    animation: rippleAnim 0.6s ease-out;
+  `;
+  if (!btn.style.position || btn.style.position === 'static') btn.style.position = 'relative';
+  btn.style.overflow = 'hidden';
+  btn.appendChild(ripple);
+  setTimeout(() => ripple.remove(), 600);
+});
+
+const style = document.createElement('style');
+style.textContent = `@keyframes rippleAnim { to { transform: scale(3); opacity: 0; } }`;
+document.head.appendChild(style);
