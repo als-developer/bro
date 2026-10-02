@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+<%- include('partials/head') %>
+</head>
+<body class="page-home">
+
+<!-- CINEMATIC INTRO -->
+<div id="cinematicIntro" class="active">
+  <div class="slash-super s1"></div>
+  <div class="slash-super s2"></div>
+  <div class="slash-super s3"></div>
+  <div class="slash-super s4"></div>
+  <div class="slash-super s5"></div>
+  <div class="slash-super s6"></div>
+  <div class="slash-super s7"></div>
+  <div class="slash-super s8"></div>
+  <div class="slash-super s9"></div>
+  <div class="slash-super s10"></div>
+  <div class="slash-super s11"></div>
+  <div class="slash-super s12"></div>
+  <div class="slash-super s13"></div>
+  <div class="slash-super s14"></div>
+  <div class="slash-super s15"></div>
+  <div class="slash-super s16"></div>
+  <div class="slash-super s17"></div>
+  <div class="slash-super s18"></div>
+
+  <div class="cross-slash cross-1"></div>
+  <div class="cross-slash cross-2"></div>
+  <div class="cross-slash cross-3"></div>
+  <div class="cross-slash cross-4"></div>
+  <div class="cross-slash cross-5"></div>
+  <div class="cross-slash cross-6"></div>
+  <div class="cross-slash cross-7"></div>
+  <div class="cross-slash cross-8"></div>
+
+  <div class="diag-slash dg-1"></div>
+  <div class="diag-slash dg-2"></div>
+  <div class="diag-slash dg-3"></div>
+  <div class="diag-slash dg-4"></div>
+  <div class="diag-slash dg-5"></div>
+  <div class="diag-slash dg-6"></div>
+
+  <div class="cine-burst b1"></div>
+  <div class="cine-burst b2"></div>
+  <div class="cine-burst b3"></div>
+  <div class="cine-burst b4"></div>
+  <div class="cine-burst b5"></div>
+
+  <div class="cine-text">
+    <div class="cine-line cl-1">🎊 HAPPY BIRTHDAY 🎊</div>
+    <div class="cine-line cl-2">DR. SHADRACK</div>
+    <div class="cine-line cl-2b">Ahazi Sanga</div>
+    <div class="cine-line cl-3">⚕️ Miaka 24 ya Mafanikio ⚕️</div>
+    <div class="cine-line cl-4">Octoba 2, 2002 → Octoba 2, 2026</div>
+    <div class="cine-line cl-5">Powered by AiliFesolution (ALS)</div>
+  </div>
+
+  <div class="cine-flash"></div>
+</div>
+
+<!-- Canvases -->
+<canvas id="fireworks"></canvas>
+<canvas id="confetti"></canvas>
+<canvas id="flowers"></canvas>
+
+<%- include('partials/navbar') %>
+
+<!-- HERO -->
+<section id="home" class="hero reveal-page">
+  <div class="hero-content glass">
+    <div class="crown">👑</div>
+    <div class="balloons">
+      <div class="balloon b1">🎈</div>
+      <div class="balloon b2">🎈</div>
+      <div class="balloon b3">🎈</div>
+      <div class="balloon b4">🎈</div>
+      <div class="balloon b5">🎈</div>
+    </div>
+
+    <p class="sub-title">🎉 Karibu kwenye Sherehe ya 🎉</p>
+    <h1 class="main-title"><span class="shine">HAPPY BIRTHDAY</span></h1>
+    <h2 class="name-title" data-text="Dr. Shadrack">DR. SHADRACK</h2>
+    <p class="name-subtitle">Ahazi Sanga</p>
+    <p class="age-badge">🎊 Miaka 24 🎊</p>
+    <p class="birth-info">Kuzaliwa: Octoba 2, 2002 → Leo: Octoba 2, 2026</p>
+    <p class="tribute">⚕️ Daktari Bingwa | First Bro | Kiongozi wa Kesho ⚕️</p>
+
+    <div class="hero-buttons">
+      <a href="/dr.shadrack" class="btn btn-primary"><i class="fas fa-user-md"></i> Wasifu Wake</a>
+      <a href="/gift" class="btn btn-secondary"><i class="fas fa-gift"></i> Zawadi</a>
+    </div>
+
+    <div class="birthday-cake">
+      <div class="cake-flame"></div>
+      <div class="cake-layer"></div>
+      <div class="cake-layer"></div>
+      <div class="cake-layer"></div>
+    </div>
+  </div>
+</section>
+
+<!-- COUNTDOWN -->
+<section class="countdown-section glass reveal">
+  <h2>🎯 Siku Yako Kuu Inakaribia</h2>
+  <div id="countdown" class="countdown">
+    <div class="cd-box"><span id="days">00</span><p>Siku</p></div>
+    <div class="cd-box"><span id="hours">00</span><p>Saa</p></div>
+    <div class="cd-box"><span id="minutes">00</span><p>Dakika</p></div>
+    <div class="cd-box"><span id="seconds">00</span><p>Sekunde</p></div>
+  </div>
+</section>
+
+<%- include('partials/footer') %>
+
+<audio id="bgMusic" loop>
+  <source src="/audio/birthday-song.mp3" type="audio/mpeg">
+</audio>
+
+<script src="/js/slashes.js"></script>
+<script src="/js/script.js"></script>
+</body>
+</html>
