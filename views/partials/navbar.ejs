@@ -1,0 +1,16 @@
+<nav class="navbar" id="mainNav">
+  <div class="logo">
+    <span class="logo-icon">⚕️</span>
+    <span class="logo-text">Dr. Shadrack</span>
+    <span class="als-badge">ALS</span>
+  </div>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="/" class="nav-link <%= currentPath === '/' ? 'active' : '' %>">🏠 Welcome</a></li>
+    <li><a href="/home" class="nav-link <%= currentPath === '/home' ? 'active' : '' %>">🏠 Nyumbani</a></li>
+    <li><a href="/happybirthday" class="nav-link <%= currentPath === '/happybirthday' ? 'active' : '' %>">🎂 Birthday</a></li>
+    <li><a href="/dr.shadrack" class="nav-link <%= currentPath === '/dr.shadrack' ? 'active' : '' %>">⚕️ Dr. Shadrack</a></li>
+    <li><a href="/gift" class="nav-link <%= currentPath === '/gift' ? 'active' : '' %>">🎁 Zawadi</a></li>
+    <li><a href="/admin" class="nav-link <%= currentPath.startsWith('/admin') ? 'active' : '' %>">🔐 Admin</a></li>
+  </ul>
+  <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+</nav>
