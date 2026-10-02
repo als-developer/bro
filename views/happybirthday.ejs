@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+<%- include('partials/head') %>
+</head>
+<body class="page-birthday">
+
+<canvas id="fireworks"></canvas>
+<canvas id="confetti"></canvas>
+<canvas id="flowers"></canvas>
+
+<%- include('partials/navbar') %>
+
+<section class="page-hero">
+  <div class="glass page-hero-content">
+    <h1 class="main-title">🎂 HAPPY BIRTHDAY 🎂</h1>
+    <h2 class="name-title">DR. SHADRACK</h2>
+    <p class="name-subtitle">Ahazi Sanga</p>
+    <p class="age-badge">🎊 Miaka 24 🎊</p>
+    <p class="tribute">Kuzaliwa: Octoba 2, 2002 | Sherehe: Octoba 2, 2026</p>
+
+    <div class="action-buttons">
+      <button id="fireBtn" class="btn btn-fire"><i class="fas fa-fire"></i> Zindua Fataki!</button>
+      <button id="flowerBtn" class="btn btn-flower"><i class="fas fa-seedling"></i> Tupa Maua!</button>
+      <button id="giftBtn" class="btn btn-gift"><i class="fas fa-gift"></i> Fungua Zawadi!</button>
+      <button id="musicBtn" class="btn btn-music"><i class="fas fa-music"></i> Washa Muziki</button>
+    </div>
+  </div>
+</section>
+
+<section class="congrats-section reveal-page">
+  <h2 class="section-title">🎊 HONGERA DR. SHADRACK! 🎊</h2>
+  <div class="congrats-grid">
+    <div class="congrats-card glass"><div class="icon">🩺</div><h3>Daktari Bingwa</h3><p>Weledi na upendo kwa wagonjwa!</p></div>
+    <div class="congrats-card glass"><div class="icon">🏆</div><h3>Mafanikio</h3><p>Miaka 24 ya mafanikio!</p></div>
+    <div class="congrats-card glass"><div class="icon">❤️</div><h3>Upendo</h3><p>Familia inakupenda!</p></div>
+    <div class="congrats-card glass"><div class="icon">🌟</div><h3>Mustakabali</h3><p>Safari ndefu inakusubiri!</p></div>
+  </div>
+</section>
+
+<%- include('partials/footer') %>
+
+<audio id="bgMusic" loop>
+  <source src="/audio/birthday-song.mp3" type="audio/mpeg">
+</audio>
+
+<script src="/js/script.js"></script>
+</body>
+</html>
