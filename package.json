@@ -4,27 +4,19 @@
   "description": "Happy 24th Birthday Web App for Dr. Shadrack - Powered by AiliFesolution (ALS)",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js"
+    "start": "node server.js"
   },
   "keywords": ["birthday", "als", "ailifesolution", "dr-shadrack"],
   "author": "AiliFesolution (ALS)",
   "license": "MIT",
   "dependencies": {
     "express": "^4.18.2",
-    "ejs": "^3.1.9",
     "express-session": "^1.17.3",
-    "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.2",
     "cors": "^2.8.5",
-    "dotenv": "^16.3.1",
-    "morgan": "^1.10.0",
-    "helmet": "^7.1.0"
-  },
-  "devDependencies": {
-    "nodemon": "^3.0.1"
+    "dotenv": "^16.3.1"
   },
   "engines": {
-    "node": ">=16.0.0"
+    "node": "18.x"
   }
 }
