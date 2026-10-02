@@ -1,19 +1,15 @@
 {
-  "name": "dr-shadrack-birthday-portal",
-  "version": "1.0.0",
-  "description": "Happy 24th Birthday Web App for Dr. Shadrack - Powered by AiliFesolution (ALS)",
+  "name": "dr-shadrack-birthday",
+  "version": "2.0.0",
+  "description": "Happy 24th Birthday Dr. Shadrack - AiliFesolution (ALS)",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
-  "keywords": ["birthday", "als", "ailifesolution", "dr-shadrack"],
-  "author": "AiliFesolution (ALS)",
-  "license": "MIT",
   "dependencies": {
     "express": "^4.18.2",
     "express-session": "^1.17.3",
     "body-parser": "^1.20.2",
-    "cors": "^2.8.5",
     "dotenv": "^16.3.1"
   },
   "engines": {
