@@ -1,7 +1,4 @@
 node_modules/
 .env
-package-lock.json
 *.log
 .DS_Store
-data/*.json
-!data/.gitkeep
