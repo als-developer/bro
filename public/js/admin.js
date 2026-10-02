@@ -1,68 +1,52 @@
-/* ═══════════ ADMIN DASHBOARD API CLIENT ═══════════ */
+async function api(url, method = 'GET', body = null) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(url, opts);
+  return res.json();
+}
 
-/* ═══════════ ADD PHOTO ═══════════ */
-document.getElementById('addPhotoBtn')?.addEventListener('click', async () => {
-  const url = document.getElementById('photoUrl').value.trim();
-  const caption = document.getElementById('photoCaption').value.trim() || 'Picha 🎉';
-  if (!url) return alert('Weka URL ya picha!');
-
-  try {
-    const res = await fetch('/api/gallery', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url, caption })
-    });
-    const data = await res.json();
-    if (data.success) {
-      document.getElementById('photoUrl').value = '';
-      document.getElementById('photoCaption').value = '';
-      location.reload();
-    } else {
-      alert('Kosa: ' + data.message);
-    }
-  } catch (e) {
-    alert('Hitilafu ya mtandao!');
-  }
-});
-
-/* ═══════════ DELETE PHOTO ═══════════ */
-window.deletePhoto = async (id) => {
-  if (!confirm('Una uhakika?')) return;
-  await fetch('/api/gallery/' + id, { method: 'DELETE' });
-  location.reload();
-};
-
-/* ═══════════ ADD TIMELINE ═══════════ */
-document.getElementById('addTlBtn')?.addEventListener('click', async () => {
-  const year = document.getElementById('tlYear').value.trim();
-  const title = document.getElementById('tlTitle').value.trim();
-  const text = document.getElementById('tlText').value.trim();
-  if (!year || !title || !text) return alert('Jaza sehemu zote!');
-
-  try {
-    const res = await fetch('/api/timeline', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ year, title, text })
-    });
-    const data = await res.json();
+const addPhotoBtn = document.getElementById('addPhotoBtn');
+if (addPhotoBtn) {
+  addPhotoBtn.addEventListener('click', async () => {
+    const url = document.getElementById('photoUrl').value.trim();
+    const caption = document.getElementById('photoCaption').value.trim() || 'Picha';
+    if (!url) return alert('Weka URL ya picha!');
+    const data = await api('/api/gallery', 'POST', { url, caption });
     if (data.success) location.reload();
     else alert('Kosa: ' + data.message);
-  } catch (e) {
-    alert('Hitilafu ya mtandao!');
-  }
-});
+  });
+}
 
-/* ═══════════ DELETE TIMELINE ═══════════ */
-window.deleteTl = async (id) => {
-  if (!confirm('Una uhakika?')) return;
-  await fetch('/api/timeline/' + id, { method: 'DELETE' });
-  location.reload();
+const addTlBtn = document.getElementById('addTlBtn');
+if (addTlBtn) {
+  addTlBtn.addEventListener('click', async () => {
+    const year = document.getElementById('tlYear').value.trim();
+    const title = document.getElementById('tlTitle').value.trim();
+    const text = document.getElementById('tlText').value.trim();
+    if (!year || !title || !text) return alert('Jaza sehemu zote!');
+    const data = await api('/api/timeline', 'POST', { year, title, text });
+    if (data.success) location.reload();
+    else alert('Kosa: ' + data.message);
+  });
+}
+
+window.deletePhoto = async (id) => {
+  if (confirm('Una uhakika?')) {
+    await api('/api/gallery/' + id, 'DELETE');
+    location.reload();
+  }
 };
 
-/* ═══════════ DELETE BLESSING ═══════════ */
+window.deleteTl = async (id) => {
+  if (confirm('Una uhakika?')) {
+    await api('/api/timeline/' + id, 'DELETE');
+    location.reload();
+  }
+};
+
 window.deleteBless = async (id) => {
-  if (!confirm('Una uhakika?')) return;
-  await fetch('/api/blessings/' + id, { method: 'DELETE' });
-  location.reload();
+  if (confirm('Una uhakika?')) {
+    await api('/api/blessings/' + id, 'DELETE');
+    location.reload();
+  }
 };
