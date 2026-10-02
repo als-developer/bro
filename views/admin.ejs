@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+<%- include('partials/head') %>
+<link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+
+<div id="adminIntro">
+  <div class="slash slash-a"></div>
+  <div class="slash slash-b"></div>
+  <div class="slash slash-c"></div>
+  <div class="slash slash-d"></div>
+  <div class="slash slash-e"></div>
+  <div class="slash slash-f"></div>
+  <div class="admin-intro-text">
+    <h1>🔐 ADMIN ACCESS</h1>
+    <p>Dr. Shadrack Birthday Portal</p>
+    <p class="als-brand">Powered by AiliFesolution (ALS)</p>
+  </div>
+</div>
+
+<div class="login-wrapper">
+  <div class="login-box glass">
+    <div class="lock-icon">🔒</div>
+    <h1>Admin Login</h1>
+    <p class="login-sub">Ingiza neno la siri kuingia</p>
+
+    <% if (error) { %>
+      <p class="error-msg" style="color: #ff3b3b;"><%= error %></p>
+    <% } %>
+
+    <form method="POST" action="/admin">
+      <div class="input-group">
+        <span class="input-icon">👤</span>
+        <input type="text" name="username" placeholder="Jina la Admin" autocomplete="off" required>
+      </div>
+      <div class="input-group">
+        <span class="input-icon">🔑</span>
+        <input type="password" name="password" placeholder="Neno la Siri" required>
+      </div>
+
+      <button type="submit" class="btn-login">🚀 Ingia</button>
+    </form>
+
+    <p class="hint">💡 Default: <b>admin</b> / <b>shadrack2026</b></p>
+    <a href="/" class="back-link">← Rudi kwenye Website</a>
+  </div>
+</div>
+
+<script>
+setTimeout(() => document.getElementById('adminIntro').classList.add('hide'), 2500);
+</script>
+</body>
+</html>
