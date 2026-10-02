@@ -550,4 +550,238 @@ app.get('/admin/dashboard', requireAuth, (req, res) => {
       <h2>📸 Ongeza Picha</h2>
       <input type="text" id="photoUrl" placeholder="URL ya picha (https://...)">
       <input type="text" id="photoCaption" placeholder="Maelezo">
-      <button
+      <button id="addPhotoBtn" class="btn-dash primary">➕ Ongeza Picha</button>
+      <div id="photoList" class="item-list">
+        ${gallery.map(g => `<div class="item-row"><span>${g.caption}</span><button onclick="deletePhoto(${g.id})">🗑️</button></div>`).join('')}
+      </div>
+    </div>
+
+    <div class="dash-card glass">
+      <h2>📖 Ongeza Historia</h2>
+      <input type="text" id="tlYear" placeholder="Mwaka">
+      <input type="text" id="tlTitle" placeholder="Kichwa">
+      <textarea id="tlText" placeholder="Maelezo..." rows="3"></textarea>
+      <button id="addTlBtn" class="btn-dash primary">➕ Ongeza</button>
+      <div id="tlList" class="item-list">
+        ${timeline.map(t => `<div class="item-row"><span>${t.year} - ${t.title}</span><button onclick="deleteTl(${t.id})">🗑️</button></div>`).join('')}
+      </div>
+    </div>
+
+    <div class="dash-card glass">
+      <h2>📊 Takwimu</h2>
+      <p>📸 Picha: <b>${gallery.length}</b></p>
+      <p>📖 Historia: <b>${timeline.length}</b></p>
+      <p>💬 Baraka: <b>${blessings.length}</b></p>
+      <hr>
+      <p style="opacity:0.7;font-size:0.85rem;">Powered by <b>AiliFesolution (ALS)</b></p>
+    </div>
+
+    <div class="dash-card glass">
+      <h2>💬 Baraka za Hivi Karibuni</h2>
+      <div class="item-list">
+        ${blessings.slice(-5).reverse().map(b => `
+          <div class="item-row">
+            <span><b>${b.name}</b>: ${b.msg.substring(0, 40)}...</span>
+            <button onclick="deleteBless(${b.id})">🗑️</button>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+async function api(url, method='GET', body=null) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(url, opts);
+  return res.json();
+}
+document.getElementById('addPhotoBtn')?.addEventListener('click', async () => {
+  const url = document.getElementById('photoUrl').value.trim();
+  const caption = document.getElementById('photoCaption').value.trim() || 'Picha 🎉';
+  if (!url) return alert('Weka URL ya picha!');
+  const data = await api('/api/gallery', 'POST', { url, caption });
+  if (data.success) location.reload();
+  else alert('Kosa: ' + data.message);
+});
+document.getElementById('addTlBtn')?.addEventListener('click', async () => {
+  const year = document.getElementById('tlYear').value.trim();
+  const title = document.getElementById('tlTitle').value.trim();
+  const text = document.getElementById('tlText').value.trim();
+  if (!year || !title || !text) return alert('Jaza sehemu zote!');
+  const data = await api('/api/timeline', 'POST', { year, title, text });
+  if (data.success) location.reload();
+  else alert('Kosa: ' + data.message);
+});
+window.deletePhoto = async (id) => { if (confirm('Una uhakika?')) { await api('/api/gallery/'+id, 'DELETE'); location.reload(); } };
+window.deleteTl = async (id) => { if (confirm('Una uhakika?')) { await api('/api/timeline/'+id, 'DELETE'); location.reload(); } };
+window.deleteBless = async (id) => { if (confirm('Una uhakika?')) { await api('/api/blessings/'+id, 'DELETE'); location.reload(); } };
+</script>
+</body>
+</html>`);
+});
+
+/* ──────── /ADMIN/LOGOUT ──────── */
+app.get('/admin/logout', (req, res) => {
+  req.session.destroy();
+  res.redirect('/admin');
+});
+
+/* ═══════════════════════════════════════════════════════ */
+/* ═══════════════════ API ENDPOINTS ══════════════════ */
+/* ═══════════════════════════════════════════════════════ */
+
+/* Gallery */
+app.get('/api/gallery', (req, res) => {
+  res.json({ success: true, data: readData('gallery.json') });
+});
+
+app.post('/api/gallery', requireAuth, (req, res) => {
+  const { url, caption } = req.body;
+  if (!url) return res.status(400).json({ success: false, message: 'URL inahitajika' });
+  const gallery = readData('gallery.json');
+  const newItem = { id: Date.now(), url, caption: caption || 'Picha 🎉', createdAt: new Date().toISOString() };
+  gallery.push(newItem);
+  writeData('gallery.json', gallery);
+  res.json({ success: true, data: newItem });
+});
+
+app.delete('/api/gallery/:id', requireAuth, (req, res) => {
+  const id = parseInt(req.params.id);
+  let gallery = readData('gallery.json');
+  gallery = gallery.filter(g => g.id !== id);
+  writeData('gallery.json', gallery);
+  res.json({ success: true });
+});
+
+/* Timeline */
+app.get('/api/timeline', (req, res) => {
+  res.json({ success: true, data: readData('timeline.json') });
+});
+
+app.post('/api/timeline', requireAuth, (req, res) => {
+  const { year, title, text } = req.body;
+  if (!year || !title || !text) return res.status(400).json({ success: false, message: 'Jaza sehemu zote!' });
+  const timeline = readData('timeline.json');
+  const newItem = { id: Date.now(), year, title, text, createdAt: new Date().toISOString() };
+  timeline.push(newItem);
+  writeData('timeline.json', timeline);
+  res.json({ success: true, data: newItem });
+});
+
+app.delete('/api/timeline/:id', requireAuth, (req, res) => {
+  const id = parseInt(req.params.id);
+  let timeline = readData('timeline.json');
+  timeline = timeline.filter(t => t.id !== id);
+  writeData('timeline.json', timeline);
+  res.json({ success: true });
+});
+
+/* Blessings */
+app.get('/api/blessings', (req, res) => {
+  const blessings = readData('blessings.json');
+  res.json({ success: true, data: blessings.slice(-20).reverse() });
+});
+
+app.post('/api/blessings', (req, res) => {
+  const { name, relation, msg } = req.body;
+  if (!name || !relation || !msg) return res.status(400).json({ success: false, message: 'Jaza sehemu zote!' });
+  const blessings = readData('blessings.json');
+  const newItem = {
+    id: Date.now(), name, relation, msg,
+    date: new Date().toLocaleDateString('sw-TZ'),
+    createdAt: new Date().toISOString()
+  };
+  blessings.push(newItem);
+  writeData('blessings.json', blessings);
+  res.json({ success: true, data: newItem });
+});
+
+app.delete('/api/blessings/:id', requireAuth, (req, res) => {
+  const id = parseInt(req.params.id);
+  let blessings = readData('blessings.json');
+  blessings = blessings.filter(b => b.id !== id);
+  writeData('blessings.json', blessings);
+  res.json({ success: true });
+});
+
+/* Stats */
+app.get('/api/stats', (req, res) => {
+  res.json({
+    success: true,
+    data: {
+      photos: readData('gallery.json').length,
+      timeline: readData('timeline.json').length,
+      blessings: readData('blessings.json').length,
+      company: CONFIG.COMPANY_NAME,
+      birthday: CONFIG.BIRTHDAY_NAME,
+      age: CONFIG.BIRTHDAY_AGE
+    }
+  });
+});
+
+/* Health check kwa Heroku */
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', uptime: process.uptime() });
+});
+
+/* ═══════════════════════════════════════════════════════ */
+/* ═══════════════════ 404 HANDLER ════════════════════ */
+/* ═══════════════════════════════════════════════════════ */
+app.use((req, res) => {
+  res.status(404).send(`<!DOCTYPE html>
+<html lang="sw">
+<head>${HEAD_HTML}<title>404 — Haipatikani</title></head>
+<body style="display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px;">
+  <div class="glass" style="padding:60px 40px;text-align:center;max-width:500px;">
+    <h1 style="font-size:6rem;color:var(--gold);text-shadow:0 0 40px var(--gold);">404</h1>
+    <h2 style="margin:20px 0;color:var(--primary);">Ukurasa Haupatikani!</h2>
+    <p style="opacity:0.7;margin-bottom:30px;">Path: <code>${req.path}</code></p>
+    <a href="/" class="btn btn-primary" style="text-decoration:none;">🏠 Rudi Nyumbani</a>
+  </div>
+</body>
+</html>`);
+});
+
+/* ═══════════ ERROR HANDLER ═══════════ */
+app.use((err, req, res, next) => {
+  console.error('❌ ERROR:', err);
+  res.status(500).json({ success: false, message: 'Hitilafu ya server', error: err.message });
+});
+
+/* ═══════════════════════════════════════════════════════ */
+/* ═══════════════════ START SERVER ═══════════════════ */
+/* ═══════════════════════════════════════════════════════ */
+app.listen(PORT, '0.0.0.0', () => {
+  console.log('\n╔══════════════════════════════════════════════════════╗');
+  console.log('║                                                      ║');
+  console.log('║   🎂  AILIFESOLUTION (ALS) BIRTHDAY PORTAL  🎂      ║');
+  console.log('║                                                      ║');
+  console.log('║   🎉  Dr. Shadrack Ahazi Sanga — Miaka 24          ║');
+  console.log('║                                                      ║');
+  console.log('╚══════════════════════════════════════════════════════╝\n');
+  console.log(`✅ Server: http://localhost:${PORT}`);
+  console.log(`\n📌 SLASHES ZINAZOPATIKANA:\n`);
+  console.log(`   🏠  /                    → Welcome`);
+  console.log(`   🏠  /welcome             → Welcome (alt)`);
+  console.log(`   🏠  /home                → Home`);
+  console.log(`   🎂  /happybirthday       → Happy Birthday`);
+  console.log(`   ⚕️   /dr.shadrack         → Dr. Shadrack`);
+  console.log(`   🎁  /gift                → Gift`);
+  console.log(`   🔐  /admin               → Admin Login`);
+  console.log(`   📊  /admin/dashboard     → Admin Dashboard`);
+  console.log(`   🔌  /api/gallery          → Gallery API`);
+  console.log(`   🔌  /api/blessings        → Blessings API\n`);
+  console.log(`👤 Admin: ${CONFIG.ADMIN_USERNAME} / ${CONFIG.ADMIN_PASSWORD}`);
+  console.log(`\n© 2026 AiliFesolution (ALS)\n`);
+});
+
+/* ═══════════ ERROR HANDLING KWA HEROKU ═══════════ */
+process.on('uncaughtException', (err) => {
+  console.error('💥 UNCAUGHT EXCEPTION:', err);
+});
+
+process.on('unhandledRejection', (err) => {
+  console.error('💥 UNHANDLED REJECTION:', err);
+});
